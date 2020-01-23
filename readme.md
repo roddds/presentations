@@ -1,10 +1,7 @@
 # Archive of presentations
 
-This repository holds different presentations I've written over the years.
+This repository holds different presentations I've given over the years.
 
-## Refactoring with jscodeshift
+You can see them all here:
 
-- Clone the repository
-- `cd jscodeshift`
-- `yarn && yarn start`
-- Visit http://localhost:8000/ on your browser
+https://roddds.github.io/presentations/
