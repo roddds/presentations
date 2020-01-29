@@ -1,4 +1,4 @@
-import { Head, Notes } from "mdx-deck";
+import { Head, Notes, Horizontal } from "mdx-deck";
 import {
   CodeSurfer,
   CodeSurferColumns,
@@ -28,11 +28,18 @@ export const theme = nightOwl;
 
 ---
 
-# jscodeshift + <img style={{width: '185px', position: 'relative', top: "18px"}} src="https://ink.carta.com/fonts/ink_white.svg" />
+# <img style={{width: '185px'}} src="https://ink.carta.com/fonts/ink_white.svg" />
 
 ## Robots taking our jobs 🤖
 
 ### Pain-free (for you) Ink upgrades
+
+
+<Notes>
+
+Thank you for coming! This is going to be about tech debt and how we're going to both avoid creating more and hopefully fix some of what's already there.
+
+</Notes>
 
 ---
 
@@ -41,26 +48,43 @@ export const theme = nightOwl;
 ![profile picture](https://ca.slack-edge.com/T02ALE3NE-U0U9655HS-2a18106ee26a-512 "Profile")
 
 - Been @ Carta for ~4 years
-- Tech lead @ Design Technology
-
----
-
-# The problem:
-
-## Upgrading components reliably <br/> across all of `carta-web`.
+- Eng lead @ Design Technology
 
 <Notes>
 
-As Ink has grown, both as a team and as a Design System, we've also gotten better at writing
-reusable components, to the point where it started becoming painful to go back and look at
-some of the first components we wrote. However, to really fix them, we'd have to introduce
-breaking changes, and...
+[after introductions] and I promise this won't have a hundred and something slides like the last time.
 
 </Notes>
 
 ---
 
-# That means a ton of breaking changes
+# The problem:
+
+## Upgrading Ink components reliably <br/> across all of `carta-web`.
+
+---
+
+<iframe
+  src="https://ink.carta.com/"
+  style={{ width: '95vw', height: '95vh', border: 0}}
+/>
+
+<Notes>
+
+The Ink Design System has existed now for almost two years, and in this process we've done a ton of stuff. A whole website where there's an interactive playground with shareable URLs, seventy something components that the team has written practically from scratch, and even a design patterns section where you can go and learn how to build a website.
+
+</Notes>
+
+---
+
+# That means a ton of breaking API changes
+
+<Notes>
+
+As Ink has grown, both as a team and as a Design System, we've also gotten really good at writing
+reusable components. That means that, as we improve as a team, we've become painfully aware of the warts of older code. However, to fix them the way we'd been doing, we'd have to introduce breaking changes, and...
+
+</Notes>
 
 ---
 
@@ -73,6 +97,13 @@ breaking changes, and...
 # Nobody likes breaking changes
 
 ## But deprecating stuff is hard
+
+<Notes>
+
+???
+
+</Notes>
+
 ---
 
 <img src={ currency } style={{ width: '50vw'}} />
@@ -81,7 +112,22 @@ breaking changes, and...
 
 <Notes>
 
-And we know we haven't been good at following deprecations.
+It's hard because it's extra work that you didn't ask for, and work that we can't do ourselves well because it's either mind-boggingly boring work, or in areas of the codebase where we have no familiarity with.
+
+</Notes>
+
+---
+
+<iframe
+  style={{width: '90vw', height: '90vh'}}
+  src='https://docs.google.com/spreadsheets/d/e/2PACX-1vRNqq_w-utvpiklBb3-xIpmAt9gO9aig1NHWQ3jsviK_-ovYStFNE1h_0InwibOzfn247hVof5nxLDz/pubhtml?widget=true&amp;headers=false
+'></iframe>
+
+<Notes>
+
+It's in that spirit that we recently conducted a full audit of our components and took note of every single interface that wasn't very intuitive, which in some cases would result in a complete rewrite or removal of the component.
+
+And when I say "we" I really mean Luca.
 
 </Notes>
 
@@ -90,6 +136,14 @@ And we know we haven't been good at following deprecations.
 # Thousands of changes in JSX
 
 ## Regex won't help you here
+
+<Notes>
+
+So we know what we don't like about our components, but making those changes ourself is harder, and waiting for you to make them is even harder, so how do we keep making these changes in a timely fashion?
+
+JSX and Javascript have lots of ambiguous syntax, where just going by the characters is not really possible. For some stuff we'd probably end up spending more time fixing the changed code than if we'd just made the changes one by one.
+
+</Notes>
 
 ---
 
@@ -106,6 +160,12 @@ And we know we haven't been good at following deprecations.
 
 # How does jscodeshift work?
 
+<Notes>
+
+[just read the slide and skip]
+
+</Notes>
+
 ---
 
 # Enter the AST (Abstract Syntax Tree)
@@ -113,6 +173,12 @@ And we know we haven't been good at following deprecations.
 ## The AST is how the interpreter sees code
 
 ##### (sort of)
+
+<Notes>
+
+And it looks sort of like this
+
+</Notes>
 
 ---
 
@@ -143,8 +209,13 @@ function sayHello(name) {
 
 </CodeSurferColumns>
 
----
+<Notes>
 
+The parsed Abstract Syntax Tree of a Javascript program looks more like this, where each part of the code is identified by a type and attributes, and those types can be used to query for specific parts of the code, and to make modifications.
+
+</Notes>
+
+---
 <CodeSurfer>
 
 ```js
@@ -158,63 +229,15 @@ export default function transformer(file, api) {
     return root.toSource();
 }
 
+// shell
 ~/carta-web $ jscodeshift --parser=flow transform.js assets/
 ```
 
 </CodeSurfer>
 
----
-
-<CodeSurferColumns>
-
-<Step>
-
-```js title="Where we start"
-function sayHello(name) {
-  alert('Hello ' + name);
-}
-```
-
-```js title="Where we want to end"
-function sayGoodbye(name) {
-  alert('Bye, ' + name);
-}
-```
-
-</Step>
-
-</CodeSurferColumns>
-
----
-
-# Live demo
-
-<a style={{ textDecoration: 'none', marginBottom: '50px' }} href="https://astexplorer.net/#/gist/44584932c9996f33241767ccc59f7b08/ea4fdfe77170593b97e885499c0cc2945967d88f">https://astexplorer.net</a>
-
-
-
-<small>
-  <a href="https://astexplorer.net/#/gist/6d14b47e8433ff5ef53852ae7e2ae9d8/738e2835d1afda32b5895f7de459a2bd35b3a56a">or click here for the final result</a>
-</small>
-
 <Notes>
 
-    export default function transformer(file, api) {
-      const j = api.jscodeshift;
-      const root = j(file.source);
-
-      const func = root.find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-
-      func
-        .find(j.Literal, {value: 'Hello '})
-        .forEach(node => j(node).replaceWith('"Bye, "'))
-
-      func
-        .find(j.Identifier, {name: 'sayHello'})
-        .forEach(node => j(node).replaceWith("sayGoodbye"));
-
-      return root.toSource();
-    }
+Those modifications are written in the form of a transform function, and that function gets called from the command line.
 
 </Notes>
 
@@ -222,21 +245,62 @@ function sayGoodbye(name) {
 
 # But what about JSX?
 
----
 
-<img src={jsx1} />
+<Notes>
 
----
+With its weird syntax that modifies the workings of javascript itself?
 
-<img src={jsx2} />
-
----
-
-<img src={jsx3} />
+</Notes>
 
 ---
 
-<img src={jsx4} />
+<img src={jsx1} style={{ width: '95vw' }}/>
+
+---
+
+<img src={jsx2} style={{ width: '95vw' }}/>
+
+---
+
+<img src={jsx3} style={{ width: '95vw' }}/>
+
+---
+
+<img src={jsx4} style={{ width: '95vw' }}/>
+
+<Notes>
+
+And by the way, if these colors look familiar it's because that's one of the ways code editors like VS Code know how to apply syntax highlighting.
+
+</Notes>
+
+---
+
+<CodeSurfer>
+
+```js
+import {
+  Dropdown,
+  Belt,
+  Display
+} from '@carta/ink';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown isDisabled />
+    </Belt>
+  </Display>
+)
+```
+
+</CodeSurfer>
+
+<Notes>
+
+So if we look at this snippet, you might not see anything necessarily wrong with it, but suppose there is, for the purpose of this exercise.
+
+</Notes>
 
 ---
 
@@ -359,7 +423,10 @@ export default function transformer(file, api) {
     const root = j(file.source);
 
     root
-      .find(j.JSXElement, { openingElement: { name: { name: 'Dropdown' } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
 
     return root.toSource();
 }
@@ -391,7 +458,10 @@ export default function transformer(file, api) {
     const root = j(file.source);
 
     root
-      .find(j.JSXElement, { openingElement: { name: { name: 'Dropdown' } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
       .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
 
     return root.toSource();
@@ -424,7 +494,10 @@ export default function transformer(file, api) {
     const root = j(file.source);
 
     root
-      .find(j.JSXElement, { openingElement: { name: { name: 'Dropdown' } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
       .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
       .forEach(e => j(e).replaceWith('disabled'))
 
@@ -458,7 +531,10 @@ export default function transformer(file, api) {
     const root = j(file.source);
 
     root
-      .find(j.JSXElement, { openingElement: { name: { name: 'Dropdown' } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
       .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
       .forEach(e => j(e).replaceWith('disabled'))
 
@@ -486,13 +562,16 @@ export default ({ isLoading }) => (
 )
 ```
 
-```js 5:8 subtitle="And if we abstract this chain..."
+```js 5:11 subtitle="And if we abstract this chain..."
 export default function transformer(file, api) {
     const j = api.jscodeshift;
     const root = j(file.source);
 
     root
-      .find(j.JSXElement, { openingElement: { name: { name: 'Dropdown' } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
       .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
       .forEach(e => j(e).replaceWith('disabled'))
 
@@ -520,13 +599,16 @@ export default ({ isLoading }) => (
 )
 ```
 
-```js 5:8 subtitle="by using named parameters"
+```js 5:11 subtitle="by using named parameters"
 export default function transformer(file, api) {
     const j = api.jscodeshift;
     const root = j(file.source);
 
     root
-      .find(j.JSXElement, { openingElement: { name: { name: elName } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: elName } } }
+      )
       .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
       .forEach(e => j(e).replaceWith('disabled'))
 
@@ -554,13 +636,16 @@ export default ({ isLoading }) => (
 )
 ```
 
-```js 5:8
+```js 5:11
 export default function transformer(file, api) {
     const j = api.jscodeshift;
     const root = j(file.source);
 
     root
-      .find(j.JSXElement, { openingElement: { name: { name: elName } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: elName } } }
+      )
       .find(j.JSXAttribute, { name: { name: before } })
       .forEach(e => j(e).replaceWith('disabled'))
 
@@ -588,13 +673,16 @@ export default ({ isLoading }) => (
 )
 ```
 
-```js 5:8
+```js 5:11
 export default function transformer(file, api) {
     const j = api.jscodeshift;
     const root = j(file.source);
 
     root
-      .find(j.JSXElement, { openingElement: { name: { name: elName } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: elName } } }
+      )
       .find(j.JSXAttribute, { name: { name: before } })
       .forEach(e => j(e).replaceWith(after))
 
@@ -622,10 +710,13 @@ export default ({ isLoading }) => (
 )
 ```
 
-```js 1:6,12
+```js 1:9,15
 function renameProp(j, root, name, oldProp, newProp) {
   root
-    .find(j.JSXElement, { openingElement: { name: { name: elName } } })
+    .find(
+      j.JSXElement,
+      { openingElement: { name: { name: elName } } }
+    )
     .find(j.JSXAttribute, { name: { name: before } })
     .forEach(e => j(e).replaceWith(after))
 }
@@ -663,7 +754,10 @@ export default ({ isLoading }) => (
 ```js subtitle="We've now refactored <Belt /> with only an extra line"
 function renameProp(j, root, name, oldProp, newProp) {
   root
-    .find(j.JSXElement, { openingElement: { name: { name: elName } } })
+    .find(
+      j.JSXElement,
+      { openingElement: { name: { name: elName } } }
+    )
     .find(j.JSXAttribute, { name: { name: before } })
     .forEach(e => j(e).replaceWith(after))
 }
@@ -686,6 +780,32 @@ export default function transformer(file, api) {
 ---
 
 # But what about the `<Display />`
+
+---
+
+<CodeSurfer>
+
+```js
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js
+export default ({ isLoading }) => (
+  { !isLoading &&
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  }
+)
+```
+
+</CodeSurfer>
 
 ---
 
@@ -1127,5 +1247,49 @@ export default ({ isLoading }) =>
 
 ---
 
-# Thank you :)
+# Special thanks:
 
+<Horizontal>
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-U0E5L7117-c7353739d5fd-512" title="Gilmar"
+  />
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-U1QLCSZQV-7ca90800ac5b-512" title="Renato"
+  />
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-U6C7JLL00-fa0a120d3c77-512" title="Thiago"
+  />
+</Horizontal>
+
+<Horizontal>
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-U6YBHRE91-abd6481f2204-512" title="Katie"
+  />
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-U7ZD8N44T-44d9efc6b04f-512" title="Antonio"
+  />
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-UA3CZCRD2-4b0ca03d9a9d-512" title="Luca"
+  />
+</Horizontal>
+
+<Horizontal>
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-UD5QJ98K1-4d417dfa75e1-512" title="Matheus"
+  />
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-UK8BNJMMF-ba671a2a5713-512" title="Brian"
+  />
+  <img
+    style={{width: '50%'}}
+    src="https://ca.slack-edge.com/T02ALE3NE-UNWFD2L3S-bd056ea04801-512" title="Eddie"
+  />
+</Horizontal>
