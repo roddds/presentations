@@ -1,4 +1,4 @@
-import { Head } from "mdx-deck";
+import { Head, Notes } from "mdx-deck";
 import {
   CodeSurfer,
   CodeSurferColumns,
@@ -7,11 +7,16 @@ import {
 import { github, nightOwl } from "@code-surfer/themes";
 
 import jcs from './jscodeshift.png';
-import ast from './ast.png'
+import ast from './ast.png';
 import jsx1 from './jsx-1.png';
 import jsx2 from './jsx-2.png';
 import jsx3 from './jsx-3.png';
 import jsx4 from './jsx-4.png';
+import confused from './confused.gif';
+import currency from './currency.png';
+import filepicker from './filepicker.png';
+import deprecatedProps from './props.png';
+
 
 export const theme = nightOwl;
 
@@ -42,107 +47,49 @@ export const theme = nightOwl;
 
 # The problem:
 
-Making **major** or even **minor** changes reliably <br/> across all of `carta-web`.
+## Upgrading components reliably <br/> across all of `carta-web`.
+
+<Notes>
+
+As Ink has grown, both as a team and as a Design System, we've also gotten better at writing
+reusable components, to the point where it started becoming painful to go back and look at
+some of the first components we wrote. However, to really fix them, we'd have to introduce
+breaking changes, and...
+
+</Notes>
 
 ---
 
-...and we're gonna make a ton of changes.
+# That means a ton of breaking changes
 
 ---
 
-## changes such as:
+# you rn probably
 
-<ul>
-  <Appear>
-    <li>Non-intuitive prop names</li>
-    <li>Invalid default values</li>
-    <li>Conflicts of responsibility</li>
-    <li>...and more</li>
-  </Appear>
-</ul>
+<img src={ confused } style={{height: '70vh'}} />
 
 ---
 
-<iframe
-  style={{width: '90vw', height: '90vh'}}
-  src='https://docs.google.com/spreadsheets/d/e/2PACX-1vRNqq_w-utvpiklBb3-xIpmAt9gO9aig1NHWQ3jsviK_-ovYStFNE1h_0InwibOzfn247hVof5nxLDz/pubhtml?widget=true&amp;headers=false
-'></iframe>
+# Nobody likes breaking changes
+
+## But deprecating stuff is hard
+---
+
+<img src={ currency } style={{ width: '50vw'}} />
+<img src={ filepicker } style={{ width: '50vw'}} />
+<img src={ deprecatedProps } style={{ width: '50vw'}} />
+
+<Notes>
+
+And we know we haven't been good at following deprecations.
+
+</Notes>
 
 ---
 
-<CodeSurfer>
+# Thousands of changes in JSX
 
-```jsx
-<Display when={!isLoading}>
-  <Belt noMargins>
-    <Dropdown isDisabled />
-  </Belt>
-</Display>
-```
-
-```jsx 3
-<Display when={!isLoading}>
-  <Belt noMargins>
-    <Dropdown isDisabled />
-  </Belt>
-</Display>
-```
-
-```jsx 3
-<Display when={!isLoading}>
-  <Belt noMargins>
-    <Dropdown disabled />
-  </Belt>
-</Display>
-```
-
-```jsx 2
-<Display when={!isLoading}>
-  <Belt noMargins>
-    <Dropdown disabled />
-  </Belt>
-</Display>
-```
-
-```jsx
-<Display when={!isLoading}>
-  <Belt>
-    <Dropdown disabled />
-  </Belt>
-</Display>
-```
-
-```jsx 1,5
-<Display when={!isLoading}>
-  <Belt>
-    <Dropdown disabled />
-  </Belt>
-</Display>
-```
-
-```jsx
-{ !isLoading &&
-  <Belt>
-    <Dropdown disabled />
-  </Belt>
-}
-```
-
-```jsx 1:5
-{ !isLoading &&
-  <Belt>
-    <Dropdown disabled />
-  </Belt>
-}
-```
-
-</CodeSurfer>
-
----
-
-# Thousands of lines of changes
-
-## Refactoring at scale
+## Regex won't help you here
 
 ---
 
@@ -161,14 +108,9 @@ Making **major** or even **minor** changes reliably <br/> across all of `carta-w
 
 ---
 
-# Enter the AST
+# Enter the AST (Abstract Syntax Tree)
 
-## Abstract Syntax Tree
-
----
-
-# The AST
-## is how the interpreter sees code
+## The AST is how the interpreter sees code
 
 ##### (sort of)
 
@@ -205,6 +147,28 @@ function sayHello(name) {
 
 <CodeSurfer>
 
+```js
+// transform.js
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    { ... }
+
+    return root.toSource();
+}
+
+~/carta-web $ jscodeshift --parser=flow transform.js assets/
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurferColumns>
+
+<Step>
+
 ```js title="Where we start"
 function sayHello(name) {
   alert('Hello ' + name);
@@ -217,205 +181,42 @@ function sayGoodbye(name) {
 }
 ```
 
-</CodeSurfer>
+</Step>
 
----
-
-<CodeSurfer>
-
-```js title="Transform template"
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    { ... }
-
-    return root.toSource();
-}
-```
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    root
-
-    return root.toSource();
-}
-```
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    root
-      .find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-
-    return root.toSource();
-}
-```
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    root
-      .find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-      .find(j.Literal, {value: 'Hello '})
-
-    return root.toSource();
-}
-```
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    root
-      .find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-      .find(j.Literal, {value: 'Hello '})
-      .forEach(node => j(node).replaceWith('"Bye, "'))
-
-    return root.toSource();
-}
-```
-
-```js 1:11
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    root
-      .find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-      .find(j.Literal, {value: 'Hello '})
-      .forEach(node => j(node).replaceWith('"Bye, "'))
-
-    return root.toSource();
-}
-```
-
-</CodeSurfer>
-
----
-
-<CodeSurfer>
-
-```js
-function sayHello(name) {
-  alert("Hello, " + name);
-}
-```
-
-```js
-function sayHello(name) {
-  alert("Bye, " + name);
-}
-```
-
-</CodeSurfer>
-
----
-
-<CodeSurfer>
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    root
-      .find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-      .find(j.Literal, {value: 'Hello '})
-      .forEach(node => j(node).replaceWith('"Bye, "'))
-
-    return root.toSource();
-}
-```
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    const func = root.find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-
-    func
-      .find(j.Literal, {value: 'Hello '})
-      .forEach(node => j(node).replaceWith('"Bye, "'))
-
-    return root.toSource();
-}
-```
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    const func = root.find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-
-    func
-      .find(j.Literal, {value: 'Hello '})
-      .forEach(node => j(node).replaceWith('"Bye, "'))
-
-    func
-
-    return root.toSource();
-}
-```
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    const func = root.find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-
-    func
-      .find(j.Literal, {value: 'Hello '})
-      .forEach(node => j(node).replaceWith('"Bye, "'))
-
-    func
-      .find(j.Identifier, {name: 'sayHello'})
-
-    return root.toSource();
-}
-```
-
-```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    const func = root.find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
-
-    func
-      .find(j.Literal, {value: 'Hello '})
-      .forEach(node => j(node).replaceWith('"Bye, "'))
-
-    func
-      .find(j.Identifier, {name: 'sayHello'})
-      .forEach(node => j(node).replaceWith("sayGoodbye"));
-
-    return root.toSource();
-}
-```
-
-</CodeSurfer>
+</CodeSurferColumns>
 
 ---
 
 # Live demo
 
-https://astexplorer.net/
+<a style={{ textDecoration: 'none', marginBottom: '50px' }} href="https://astexplorer.net/#/gist/44584932c9996f33241767ccc59f7b08/ea4fdfe77170593b97e885499c0cc2945967d88f">https://astexplorer.net</a>
+
+
 
 <small>
   <a href="https://astexplorer.net/#/gist/6d14b47e8433ff5ef53852ae7e2ae9d8/738e2835d1afda32b5895f7de459a2bd35b3a56a">or click here for the final result</a>
 </small>
+
+<Notes>
+
+    export default function transformer(file, api) {
+      const j = api.jscodeshift;
+      const root = j(file.source);
+
+      const func = root.find(j.FunctionDeclaration, {id: {name: 'sayHello'}})
+
+      func
+        .find(j.Literal, {value: 'Hello '})
+        .forEach(node => j(node).replaceWith('"Bye, "'))
+
+      func
+        .find(j.Identifier, {name: 'sayHello'})
+        .forEach(node => j(node).replaceWith("sayGoodbye"));
+
+      return root.toSource();
+    }
+
+</Notes>
 
 ---
 
@@ -908,22 +709,9 @@ export default ({ isLoading }) => (
 )
 ```
 
-```js 7[1]
-function renameProp(j, root, name, oldProp, newProp) {
-  root
-    .find(j.JSXElement, { openingElement: { name: { name: elName } } })
-    .find(j.JSXAttribute, { name: { name: before } })
-    .forEach(e => j(e).replaceWith(after))
-}
+```js
+function transformer(file, api) {
 
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
-    renameProp(j, root, 'Dropdown', 'isDisabled', 'disabled')
-    renameProp(j, root, 'Belt', 'noMargins', null)
-
-    return root.toSource();
 }
 ```
 
@@ -948,13 +736,34 @@ export default ({ isLoading }) => (
 ```
 
 ```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
+}
+```
 
-    return root.toSource();
+</Step>
+
+<Step>
+
+```js 8[11:28]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from '@carta/ink';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js
+function transformer(file, api) {
+    root
 }
 ```
 
@@ -979,14 +788,12 @@ export default ({ isLoading }) => (
 ```
 
 ```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
-      .find(j.JSXElement, { openingElement: { name: { name: "Display" } } })
-
-    return root.toSource();
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
 }
 ```
 
@@ -1011,17 +818,15 @@ export default ({ isLoading }) => (
 ```
 
 ```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
-      .find(j.JSXElement, { openingElement: { name: { name: "Display" } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
       .forEach(display => {
 
       })
-
-    return root.toSource();
 }
 ```
 
@@ -1046,17 +851,15 @@ export default ({ isLoading }) => (
 ```
 
 ```js 7[15:22]
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
-      .find(j.JSXElement, { openingElement: { name: { name: "Display" } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
       .forEach(display => {
 
       })
-
-    return root.toSource();
 }
 ```
 
@@ -1081,17 +884,15 @@ export default ({ isLoading }) => (
 ```
 
 ```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
-      .find(j.JSXElement, { openingElement: { name: { name: "Display" } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
       .forEach(display => {
         const displayNode = display.node;
       })
-
-    return root.toSource();
 }
 ```
 
@@ -1116,19 +917,20 @@ export default ({ isLoading }) => (
 ```
 
 ```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
-      .find(j.JSXElement, { openingElement: { name: { name: "Display" } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
       .forEach(display => {
         const displayNode = display.node;
 
-        const condition = displayNode.openingElement.attributes.find(attr => attr.name.name === 'when').value;
+        const condition = displayNode
+          .openingElement
+          .attributes
+          .find(attr => attr.name.name === 'when').value;
       })
-
-    return root.toSource();
 }
 ```
 
@@ -1153,20 +955,24 @@ export default ({ isLoading }) => (
 ```
 
 ```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
-      .find(j.JSXElement, { openingElement: { name: { name: "Display" } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
       .forEach(display => {
         const displayNode = display.node;
 
-        const condition = displayNode.openingElement.attributes.find(attr => attr.name.name === 'when').value;
-        const children = displayNode.children.find(e => e.type === 'JSXElement');
-      })
+        const condition = displayNode
+          .openingElement
+          .attributes
+          .find(attr => attr.name.name === 'when').value;
 
-    return root.toSource();
+        const children = displayNode
+          .children
+          .find(e => e.type === 'JSXElement');
+      })
 }
 ```
 
@@ -1191,22 +997,28 @@ export default ({ isLoading }) => (
 ```
 
 ```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
-      .find(j.JSXElement, { openingElement: { name: { name: "Display" } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
       .forEach(display => {
         const displayNode = display.node;
 
-        const condition = displayNode.openingElement.attributes.find(attr => attr.name.name === 'when').value;
-        const children = displayNode.children.find(e => e.type === 'JSXElement');
+        const condition = displayNode
+          .openingElement
+          .attributes
+          .find(attr => attr.name.name === 'when').value;
 
-        const boolExprNode = j.logicalExpression("&&", condition.expression, children);
+        const children = displayNode
+          .children
+          .find(e => e.type === 'JSXElement');
+
+        const boolExprNode = j.logicalExpression(
+          "&&", condition.expression, children
+        );
       })
-
-    return root.toSource();
 }
 ```
 
@@ -1229,24 +1041,30 @@ export default ({ isLoading }) => (
 ```
 
 ```js
-export default function transformer(file, api) {
-    const j = api.jscodeshift;
-    const root = j(file.source);
-
+function transformer(file, api) {
     root
-      .find(j.JSXElement, { openingElement: { name: { name: "Display" } } })
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
       .forEach(display => {
         const displayNode = display.node;
 
-        const condition = displayNode.openingElement.attributes.find(attr => attr.name.name === 'when').value;
-        const children = displayNode.children.find(e => e.type === 'JSXElement');
+        const condition = displayNode
+          .openingElement
+          .attributes
+          .find(attr => attr.name.name === 'when').value;
 
-        const boolExprNode = j.logicalExpression("&&", condition.expression, children);
+        const children = displayNode
+          .children
+          .find(e => e.type === 'JSXElement');
+
+        const boolExprNode = j.logicalExpression(
+          "&&", condition.expression, children
+        );
 
         display.replace(boolExprNode)
       })
-
-    return root.toSource();
 }
 ```
 
@@ -1306,3 +1124,8 @@ export default ({ isLoading }) =>
 ```
 
 </CodeSurfer>
+
+---
+
+# Thank you :)
+
