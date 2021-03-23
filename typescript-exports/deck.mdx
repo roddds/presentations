@@ -1,0 +1,348 @@
+import {
+  CodeSurfer,
+  CodeSurferColumns,
+  Step,
+} from "code-surfer";
+import { github, vsDark } from "@code-surfer/themes";
+import before from "./before-ts.png"
+import after from "./after-ts.png"
+import "prismjs/components/prism-tsx"
+
+export const theme = vsDark;
+
+# Some Typescript lessons
+
+---
+
+## We're now exporting types
+
+---
+
+### But a lot of their types were wrong
+
+---
+
+### How we got here and what was changed
+
+---
+
+<CodeSurfer>
+
+```tsx
+// src/index.ts
+import Belt from './components/Belt/Belt';
+
+(...)
+
+export {
+  Belt,
+  Props,
+}
+```
+
+```tsx
+// src/index.ts
+import Belt, { Props } from './components/Belt/Belt';
+
+(...)
+
+export {
+  Belt,
+  Props,
+}
+```
+
+```tsx
+// src/index.ts
+import Belt, { BeltProps } from './components/Belt/Belt';
+
+(...)
+
+export {
+  Belt,
+  BeltProps,
+}
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```tsx
+// Props.ts
+export interface Props {
+  name: string;
+}
+```
+
+```tsx
+interface Props {
+  name: string;
+}
+
+const Hello = ({ name }: Props) => <h1>Hello, { name }</h1>;
+```
+
+```tsx
+export interface Props {
+  name: string;
+}
+
+const Hello = ({ name }: Props) => <h1>Hello, { name }</h1>;
+```
+
+```tsx
+export interface HelloProps {
+  name: string;
+}
+
+const Hello = ({ name }: HelloProps) => <h1>Hello, { name }</h1>;
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```tsx
+// src/index.ts
+import Belt, { BeltProps } from './components/Belt/Belt';
+
+(...)
+
+export {
+  Belt,
+  BeltProps,
+}
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```tsx
+// assets/app/capital_markets/werk/OrderChartContainer/OrderChartContainer.tsx
+<Dropdown
+  align="right"
+  trigger={({ onClick }: { onClick: () => void }) => (
+    <Dropdown.Trigger type="transparent" onClick={onClick}>
+      {CHART_TYPE_LABEL[orderSide][chartType]}
+    </Dropdown.Trigger>
+  )}
+>
+```
+
+```tsx
+// assets/app/capital_markets/werk/OrderChartContainer/OrderChartContainer.tsx
+<Dropdown
+  align="right"
+  trigger={({ onClick }) => (
+    <Dropdown.Trigger type="transparent" onClick={onClick}>
+      {CHART_TYPE_LABEL[orderSide][chartType]}
+    </Dropdown.Trigger>
+  )}
+>
+```
+
+</CodeSurfer>
+
+---
+
+
+<CodeSurfer>
+
+```tsx
+import * as React from 'react';
+import Ink from '@carta/ink';
+
+interface Props {
+    onClick: () => void;
+    selectedCount: number;
+}
+
+(...)
+
+<Button onClick={props.onClick} />
+```
+
+```tsx
+import * as React from 'react';
+import Ink, { ButtonProps } from '@carta/ink';
+
+interface Props {
+    onClick: () => void;
+    selectedCount: number;
+}
+
+(...)
+
+<Button onClick={props.onClick} />
+```
+
+```tsx
+import * as React from 'react';
+import Ink, { ButtonProps } from '@carta/ink';
+
+interface Props {
+    onClick: ButtonProps['onClick'];
+    selectedCount: number;
+}
+
+(...)
+
+<Button onClick={props.onClick} />
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurfer>
+
+```tsx
+<Ink.Dropdown.Item
+    render={() => (
+        <Ink.Dropdown.Button
+            type="transparent"
+            onClick={() =>
+                api.exportJournals(
+                    props.dataset.exportJournalsUrl,
+```
+
+```tsx
+<Ink.Dropdown.Item
+    render={() => (
+        <Ink.Dropdown.Button
+            onClick={() =>
+                api.exportJournals(
+                    props.dataset.exportJournalsUrl,
+```
+
+</CodeSurfer>
+
+---
+
+
+<CodeSurfer>
+
+```tsx
+<Ink.Dropdown.Item
+    render={(itemProps: {}) => (
+        <Ink.Dropdown.Checkbox
+            {...itemProps}
+            id={partner.id}
+            value={selectedPartnerIDs.has(partner.id)}
+            label={partner.investorName}
+            onChange={(event: CheckboxEvent) =>
+```
+
+```tsx
+<Ink.Dropdown.Item
+    render={(itemProps: {}) => (
+        <Ink.Dropdown.Checkbox
+            {...itemProps}
+            id={String(partner.id)}
+            value={selectedPartnerIDs.has(partner.id)}
+            label={partner.investorName}
+            onChange={(event: CheckboxEvent) =>
+```
+
+</CodeSurfer>
+
+---
+
+<CodeSurferColumns>
+
+<Step subtitle="">
+
+```tsx
+interface SecondaryContact {
+    name: string;
+    email: string;
+    contact_id: string;
+    financial_reports: boolean;
+    annual_meeting: boolean;
+    capital_account_statements: boolean;
+    capital_calls: boolean;
+    distributions: boolean;
+    general: boolean;
+    legal: boolean;
+    tax: boolean;
+    wire_instruction_edit: boolean;
+    user_permissions_list?: string[];
+}
+
+const permissionKeyAndPretty = [
+  {
+    key: 'financial_reports',
+    pretty: 'Financial Reports',
+  },
+  {
+    key: 'annual_meeting',
+    pretty: 'Annual Meeting',
+  },
+  (...)
+];
+```
+
+```tsx
+contacts.map(contact: SecondaryContact =>
+  permissionKeyAndPretty.map(keyAndPretty => contact[keyAndPretty.key])
+)
+```
+</Step>
+
+<Step subtitle="">
+
+```tsx
+interface SecondaryContact {
+    name: string;
+    email: string;
+    contact_id: string;
+    financial_reports: boolean;
+    annual_meeting: boolean;
+    capital_account_statements: boolean;
+    capital_calls: boolean;
+    distributions: boolean;
+    general: boolean;
+    legal: boolean;
+    tax: boolean;
+    wire_instruction_edit: boolean;
+    user_permissions_list?: string[];
+}
+
+const permissionKeyAndPretty = [
+  {
+    key: 'financial_reports',
+    pretty: 'Financial Reports',
+  },
+  {
+    key: 'annual_meeting',
+    pretty: 'Annual Meeting',
+  },
+  (...)
+] as const;
+```
+
+```tsx
+contacts.map(contact: SecondaryContact =>
+  permissionKeyAndPretty.map(keyAndPretty => contact[keyAndPretty.key])
+)
+```
+</Step>
+
+
+</CodeSurferColumns>
+
+---
+
+<img src={before} />
+
+---
+
+<img src={after} />
