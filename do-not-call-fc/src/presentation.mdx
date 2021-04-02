@@ -1,0 +1,195 @@
+import { CodeSurfer, CodeSurferColumns, Step } from 'code-surfer';
+import { github } from '@code-surfer/themes';
+import SlideOne from './SlideOne';
+import SlideTwo from './SlideTwo';
+import SlideThree from './SlideThree';
+import SlideFour from './SlideFour';
+import SlideFive from './SlideFive';
+import SlideSix from './SlideSix';
+import SlideSeven from './SlideSeven';
+
+# Stop doing this
+
+```jsx
+const defineBody = () => <div>Hello!</div>;
+
+return <div>{defineBody()}</div>;
+```
+
+<Note>Introductions</Note>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideOne />
+
+```jsx file=./SlideOne.js
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+<Note>Go over each part of the app</Note>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideTwo />
+
+```jsx file=./SlideTwo.js
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+<Note>If we want to track rerenders</Note>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideTwo />
+
+```jsx file=./SlideTwo.js 3,6,39[50:93]
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+<Note>We add these lines</Note>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideTwo />
+
+```jsx file=./SlideTwo.js
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+<Note>We also have a "full render" count</Note>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideThree />
+
+```jsx file=./SlideThree.js
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+<Note>Split it in functions</Note>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideFour />
+
+```jsx file=./SlideFour.js
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+<Note>We can count how many times each part rerenders</Note>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideFive />
+
+```jsx file=./SlideFive.js
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideSix />
+
+```jsx file=./SlideSix.js
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+<Note>And display those counts</Note>
+
+---
+
+<CodeSurferColumns themes={[github, github]}>
+
+<Step>
+
+<SlideSeven />
+
+```jsx file=./SlideSeven.js
+
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+---
+
+# Components re-render when their `props` change
+
+---
+
+# Components re-render when their `state` changes
+
+---
+
+# Functions are not components
+
+---
+
+# Functions _always_ re-render
+
+---
