@@ -1,2 +1,4 @@
-node_modules/
+refactoring/node_modules/**/*
+do-not-call-fc/node_modules/**/*
+typescript-exports/node_modules/**/*
 public/
