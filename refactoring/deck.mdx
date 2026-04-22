@@ -1,0 +1,1241 @@
+import { Head, Notes, Horizontal } from "mdx-deck";
+import {
+  CodeSurfer,
+  CodeSurferColumns,
+  Step,
+} from "code-surfer";
+import { github, nightOwl } from "@code-surfer/themes";
+
+import jcs from './jscodeshift.png';
+import ast from './ast.png';
+import jsx1 from './jsx-1.png';
+import jsx2 from './jsx-2.png';
+import jsx3 from './jsx-3.png';
+import jsx4 from './jsx-4.png';
+import confused from './confused.gif';
+import currency from './currency.png';
+import filepicker from './filepicker.png';
+import deprecatedProps from './props.png';
+import placeholder from './placeholder.jpg'
+
+
+export const theme = nightOwl;
+
+<Head>
+  <title>Refactoring with jscodeshift</title>
+</Head>
+
+# Hello!
+
+---
+
+# <img style={{width: '185px'}} src="https://ink.carta.com/fonts/ink_white.svg" />
+
+## Robots taking our jobs 🤖
+
+### Pain-free (for you) Ink upgrades
+
+
+<Notes>
+
+Thank you for coming! This is going to be about tech debt and how we're going to both avoid creating more and hopefully fix some of what's already there.
+
+</Notes>
+
+---
+
+# Rodrigo Deodoro
+
+![profile picture](./placeholder.jpg "Profile")
+
+- Been @ Carta for ~4 years
+- Eng lead @ Design Technology
+
+<Notes>
+
+[after introductions] and I promise this won't have a hundred and something slides like the last time.
+
+</Notes>
+
+---
+
+# The problem:
+
+## Upgrading Ink components reliably <br/> across all of `carta-web`.
+
+---
+
+<iframe
+  src="https://ink.carta.com/"
+  style={{ width: '95vw', height: '95vh', border: 0}}
+/>
+
+<Notes>
+
+The Ink Design System has existed now for almost two years, and in this process we've done a ton of stuff. A whole website where there's an interactive playground with shareable URLs, seventy something components that the team has written practically from scratch, and even a design patterns section where you can go and learn how to build a website.
+
+As Ink has grown, both as a team and as a Design System, we've also gotten really good at writing
+reusable components. That means that, as we improve as a team, we've become painfully aware of the warts of older code. However, to fix them the way we'd been doing, we'd have to introduce breaking changes, and...
+
+</Notes>
+
+---
+
+# That means a ton of breaking API changes
+
+## you rn probably
+
+<img src={ confused }  />
+
+---
+
+# Nobody likes breaking changes
+
+## But deprecating stuff is hard
+
+<Notes>
+
+???
+
+</Notes>
+
+---
+
+<img src={ currency } style={{ width: '50vw'}} />
+<img src={ filepicker } style={{ width: '50vw'}} />
+<img src={ deprecatedProps } style={{ width: '50vw'}} />
+
+<Notes>
+
+It's hard because it's extra work that you didn't ask for, and work that we can't do ourselves well because it's either mind-boggingly boring work, or in areas of the codebase where we have no familiarity with.
+
+</Notes>
+
+---
+[Placeholder: tracking spreadsheet]
+
+<Notes>
+
+It's in that spirit that we recently conducted a full audit of our components and took note of every single interface that wasn't very intuitive, which in some cases would result in a complete rewrite or removal of the component.
+
+And when I say "we" I really mean Luca.
+
+</Notes>
+
+---
+
+# Thousands of changes in JSX
+
+## Regex won't help you here
+
+<Notes>
+
+So we know what we don't like about our components, but making those changes ourself is harder, and waiting for you to make them is even harder, so how do we keep making these changes in a timely fashion?
+
+Grep, sed and find+replace are some of the usual tools we could use, but JSX and Javascript have lots of ambiguous syntax, where just going by the characters is not really possible. For some stuff we'd probably end up spending more time fixing the changed code than if we'd just made the changes one by one.
+
+</Notes>
+
+---
+
+<img
+    style={{
+        maxWidth: '100vw',
+        maxHeight: '100vh',
+    }}
+    src={jcs}
+/>
+
+---
+
+
+# How does jscodeshift work?
+
+<Notes>
+
+[just read the slide and skip]
+
+</Notes>
+
+---
+
+# Enter the AST (Abstract Syntax Tree)
+
+## The AST is how the interpreter sees code
+
+##### (sort of)
+
+<Notes>
+
+And it looks sort of like this
+
+</Notes>
+
+---
+
+<iframe
+  style={{ width: '95vw', height: '95vh', border: 0}}
+  src='https://rezmason.github.io/matrix/'
+></iframe>
+
+---
+
+<CodeSurferColumns>
+
+<Step>
+
+```js
+function sayHello(name) {
+  alert('Hello ' + name);
+}
+
+```
+
+<img
+ style={{ height: '90vh', }}
+ src={ ast }
+/>
+
+</Step>
+
+</CodeSurferColumns>
+
+<Notes>
+
+The parsed Abstract Syntax Tree of a Javascript program looks more like this, and information about the position of the code in the file like line number and column are also present but have been ommitted from this screenshot. Each part of the code is identified by a type and attributes, and those types can be used to query for specific parts of the code, and to make modifications.
+
+</Notes>
+
+---
+<CodeSurfer>
+
+```js
+// transform.js
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    { ... }
+
+    return root.toSource();
+}
+
+// shell
+~/carta-web $ jscodeshift --parser=flow transform.js assets/
+```
+
+</CodeSurfer>
+
+<Notes>
+
+Those modifications are written in the form of a transform function, and that function gets called from the command line.
+
+</Notes>
+
+---
+
+# But what about JSX?
+
+
+<Notes>
+
+With its weird syntax that modifies the workings of javascript itself?
+
+</Notes>
+
+---
+
+<img src={jsx1} style={{ width: '95vw' }}/>
+
+---
+
+<img src={jsx2} style={{ width: '95vw' }}/>
+
+---
+
+<img src={jsx3} style={{ width: '95vw' }}/>
+
+---
+
+<img src={jsx4} style={{ width: '95vw' }}/>
+
+<Notes>
+
+And by the way, if these colors look familiar it's because that's one of the ways code editors like VS Code know how to apply syntax highlighting.
+
+</Notes>
+
+---
+
+<CodeSurfer>
+
+```js
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown isDisabled />
+    </Belt>
+  </Display>
+)
+```
+
+</CodeSurfer>
+
+<Notes>
+
+So if we look at this snippet, you might not see anything necessarily wrong with it, but suppose there is, for the purpose of this exercise.
+
+</Notes>
+
+---
+
+<CodeSurferColumns>
+
+<Step>
+
+```js
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown isDisabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="Starting with our transformer template"
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    { ... }
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js 10[16:26] subtitle="Suppose what we want to do is replace the isDisabled with disabled"
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown isDisabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    { ... }
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown isDisabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="We start a chain from root"
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js 10
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown isDisabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="...then make a query for opening JSX tags called 'Dropdown'"
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js 10[16:26]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown isDisabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="...who have the 'isDisabled' attribute, or prop"
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
+      .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js 10[16:24]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="and replace it with 'disabled'"
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
+      .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
+      .forEach(e => j(e).replaceWith('disabled'))
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="And we're done!"
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
+      .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
+      .forEach(e => j(e).replaceWith('disabled'))
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js 6[1:2]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js 5:11 subtitle="And if we abstract this chain..."
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: 'Dropdown' } } }
+      )
+      .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
+      .forEach(e => j(e).replaceWith('disabled'))
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js 6[1:2]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js 5:11 subtitle="by using named parameters"
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: elName } } }
+      )
+      .find(j.JSXAttribute, { name: { name: 'isDisabled' } })
+      .forEach(e => j(e).replaceWith('disabled'))
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js 6[1:2]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js 5:11
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: elName } } }
+      )
+      .find(j.JSXAttribute, { name: { name: before } })
+      .forEach(e => j(e).replaceWith('disabled'))
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js 6[1:2]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js 5:11
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: elName } } }
+      )
+      .find(j.JSXAttribute, { name: { name: before } })
+      .forEach(e => j(e).replaceWith(after))
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt noMargins>
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js 1:9,15
+function renameProp(j, root, name, oldProp, newProp) {
+  root
+    .find(
+      j.JSXElement,
+      { openingElement: { name: { name: elName } } }
+    )
+    .find(j.JSXAttribute, { name: { name: before } })
+    .forEach(e => j(e).replaceWith(after))
+}
+
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    renameProp(j, root, 'Dropdown', 'isDisabled', 'disabled')
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+<Step>
+
+```js
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="We've now refactored <Belt /> with only an extra line"
+function renameProp(j, root, name, oldProp, newProp) {
+  root
+    .find(
+      j.JSXElement,
+      { openingElement: { name: { name: elName } } }
+    )
+    .find(j.JSXAttribute, { name: { name: before } })
+    .forEach(e => j(e).replaceWith(after))
+}
+
+export default function transformer(file, api) {
+    const j = api.jscodeshift;
+    const root = j(file.source);
+
+    renameProp(j, root, 'Dropdown', 'isDisabled', 'disabled')
+    renameProp(j, root, 'Belt', 'noMargins', null)
+
+    return root.toSource();
+}
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+---
+
+# But what about the `<Display />`
+
+---
+
+<CodeSurfer>
+
+```js
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js
+export default ({ isLoading }) => (
+  { !isLoading &&
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  }
+)
+```
+
+</CodeSurfer>
+
+<Notes>
+
+Ever since it was added to carta-web, Display has been a popular choice for conditional rendering, but unfortunately one that comes with a few issues and hidden traps. Fortunately, there's syntax we can use to get the same effect, that is just as readable but without any of the pitfalls. Can anybody guess what it is?
+
+(A logical expression)
+
+</Notes>
+
+---
+
+<CodeSurferColumns>
+
+<Step>
+
+```js 8,12 subtitle="To correctly replace Display..."
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js
+function transformer(file, api) {
+
+}
+```
+
+</Step>
+
+<Step>
+
+```js 8[11:30] subtitle="We need to look at the condition it's using"
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js
+function transformer(file, api) {
+    root
+}
+```
+
+</Step>
+
+<Step>
+
+```js 8,12
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="Start by querying for opening tags called Display"
+function transformer(file, api) {
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
+}
+```
+
+</Step>
+
+<Step>
+
+```js 8,12
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="Then for each instance of the Display component"
+function transformer(file, api) {
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
+      .forEach(display => {
+
+      })
+}
+```
+
+</Step>
+
+<Step>
+
+```js 8,12
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="We get the Display node"
+function transformer(file, api) {
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
+      .forEach(display => {
+        const displayNode = display.node;
+      })
+}
+```
+
+</Step>
+
+<Step>
+
+```js 8[11:30]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="And from the node we get the when prop"
+function transformer(file, api) {
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
+      .forEach(display => {
+        const displayNode = display.node;
+
+        const condition = displayNode
+          .openingElement
+          .attributes
+          .find(attr => attr.name.name === 'when').value;
+      })
+}
+```
+
+</Step>
+
+<Step>
+
+```js 9,10,11
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="Then we filter the child elements"
+function transformer(file, api) {
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
+      .forEach(display => {
+        const displayNode = display.node;
+
+        const condition = displayNode
+          .openingElement
+          .attributes
+          .find(attr => attr.name.name === 'when').value;
+
+        const children = displayNode
+          .children
+          .find(e => e.type === 'JSXElement');
+      })
+}
+```
+
+</Step>
+
+<Step>
+
+```js 8[18:28]
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  <Display when={ !isLoading }>
+    <Belt >
+      <Dropdown disabled />
+    </Belt>
+  </Display>
+)
+```
+
+```js subtitle="Create the new logical expression node "
+function transformer(file, api) {
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
+      .forEach(display => {
+        const displayNode = display.node;
+
+        const condition = displayNode
+          .openingElement
+          .attributes
+          .find(attr => attr.name.name === 'when').value;
+
+        const children = displayNode
+          .children
+          .find(e => e.type === 'JSXElement');
+
+        const boolExprNode = j.logicalExpression(
+          "&&", condition.expression, children
+        );
+      })
+}
+```
+
+</Step>
+
+<Step>
+
+```js 8,9,10
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  !isLoading && <Belt >
+    <Dropdown isDisabled />
+  </Belt>
+)
+```
+
+```js subtitle="And call the replace method"
+function transformer(file, api) {
+    root
+      .find(
+        j.JSXElement,
+        { openingElement: { name: { name: "Display" } } }
+      )
+      .forEach(display => {
+        const displayNode = display.node;
+
+        const condition = displayNode
+          .openingElement
+          .attributes
+          .find(attr => attr.name.name === 'when').value;
+
+        const children = displayNode
+          .children
+          .find(e => e.type === 'JSXElement');
+
+        const boolExprNode = j.logicalExpression(
+          "&&", condition.expression, children
+        );
+
+        display.replace(boolExprNode)
+      })
+}
+```
+
+</Step>
+
+</CodeSurferColumns>
+
+---
+
+<CodeSurfer>
+
+```js
+import {
+  Dropdown,
+  Belt,
+  Display
+} from 'carta-design-system';
+
+export default ({ isLoading }) => (
+  !isLoading && <Belt >
+    <Dropdown isDisabled />
+  </Belt>
+)
+```
+
+```js
+import { Dropdown, Belt, Display } from "carta-design-system";
+
+export default ({ isLoading }) =>
+  !isLoading && (
+    <Belt>
+      <Dropdown isDisabled />
+    </Belt>
+  );
+```
+
+```js
+import { Dropdown, Belt } from "carta-design-system";
+
+export default ({ isLoading }) =>
+  !isLoading && (
+    <Belt>
+      <Dropdown isDisabled />
+    </Belt>
+  );
+```
+
+```js
+import { Dropdown, Belt } from "carta-design-system";
+
+export default ({ isLoading }) =>
+  !isLoading && (
+    <Belt>
+      <Dropdown isDisabled />
+    </Belt>
+  );
+```
+
+</CodeSurfer>
+
+<Notes>
+
+After a transform formatting can look a little weird, but that's what Prettier and ESLint are for.
+
+</Notes>
+
+---
+
+# Special thanks:
+
+<Horizontal>
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Gilmar"
+  />
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Renato"
+  />
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Thiago"
+  />
+</Horizontal>
+
+<Horizontal>
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Katie"
+  />
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Antonio"
+  />
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Luca"
+  />
+</Horizontal>
+
+<Horizontal>
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Matheus"
+  />
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Brian"
+  />
+  <img
+    style={{width: '50%'}}
+    src={placeholder} title="Eddie"
+  />
+</Horizontal>
